@@ -1,15 +1,31 @@
 package main
 
 import (
-	"gateway/internal/db"
+	"io"
 	"log"
+	"net/http"
+	"time"
 )
 
 func main() {
-	log.Print("Nonproduct Gateway Server has started")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/hello", hello)
 
-	_, err := db.StartDB()
-	if err != nil {
-		log.Printf("Error starting the database %v", err)
+	s := &http.Server{
+		Addr:			":8080",
+		Handler:		mux,
+		ReadTimeout: 	2 * time.Second,
+		WriteTimeout: 	2 * time.Second,
+		IdleTimeout:	5 * time.Second,
 	}
+
+	log.Println("Starting Gateway server...")
+	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatal("Server startup failed")
+	}
+	s.ListenAndServe()
+}
+
+func hello(w http.ResponseWriter, req *http.Request) {
+	io.WriteString(w, "Hello, world!")
 }

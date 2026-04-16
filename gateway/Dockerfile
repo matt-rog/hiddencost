@@ -1,12 +1,13 @@
-FROM golang
+FROM golang:alpine
 
-RUN mkdir /app
+WORKDIR /gateway
+COPY go.mod go.sum ./
+RUN go mod download
 
-ADD . /app
+COPY . .
 
-WORKDIR /app
+RUN go build -o ./bin/api ./cmd/api \
+    && go build -o ./bin/migrate ./cmd/migrate
 
-RUN go build -o main ./cmd/api/main.go
-
+CMD ["/gateway/bin/api"]
 EXPOSE 8080
-CMD [ "/app/main" ]
