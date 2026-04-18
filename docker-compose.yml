@@ -10,22 +10,33 @@ services:
       - 5432:5432
       healthcheck:
         test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
-        interval: 10s
+        interval: 3s
         retries: 5
-        start_period: 30s
-        timeout: 10s
+        timeout: 5s
+      restart: always
 
   gateway-api:
       build: gateway/
       ports:
         - 8080:8080
       environment:
-        - PORT=8080
-        - DATABASE_URL=postgres://postgres:admin@db/postgres?sslmode=disable
+        - SERVER_PORT=8080
+        - SERVER_TIMEOUT_READ=3s
+        - SERVER_TIMEOUT_WRITE=5s
+        - SERVER_TIMEOUT_IDLE=5s
+        - SERVER_DEBUG=true
+        - DB_DRIVER=postgres
+        - DB_HOST=db
+        - DB_NAME=postgres
+        - DB_USER=postgres
+        - DB_PASSWORD=admin
+        - DB_DEBUG=true
+        - DB_SSLMODE=disable
       depends_on:
         db:
           condition: service_healthy
           restart: true
+      command: ["sh", "-c", "/gateway/bin/migrate up && /gateway/bin/api"]
 
   searxng:
       image: searxng/searxng:2026.1.11-cf74e1d9e
@@ -35,12 +46,12 @@ services:
         - ./searxng/config/:/etc/searxng
         - ./searxng/data/:/var/cache/searxng
 
-  vllm:
-      build: vllm
-      runtime: nvidia
-      gpus: all
-      ipc: host
-      ports:
-        - 8081:8000
-      volumes:
-        - ~/.cache/huggingface:/root/.cache/huggingface
+  # vllm:
+  #     build: vllm
+  #     runtime: nvidia
+  #     gpus: all
+  #     ipc: host
+  #     ports:
+  #       - 8081:8000
+  #     volumes:
+  #       - ~/.cache/huggingface:/root/.cache/huggingface

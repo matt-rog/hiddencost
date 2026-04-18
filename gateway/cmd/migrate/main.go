@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gateway/config"
 	"log"
 	"os"
 
@@ -12,7 +13,7 @@ import (
 
 const (
 	dialect  = "pgx"
-	dbString = "host=localhost user=postgres password=admin dbname=postgres port=5432 sslmode=disable"
+	fmtDBString = "host=%s user=%s password=%s dbname=%s port=%d sslmode=disable"
 )
 
 var (
@@ -31,6 +32,9 @@ func main() {
 	}
 
 	command := args[0]
+
+	c := config.NewDB()
+	dbString := fmt.Sprintf(fmtDBString, c.Host, c.Username, c.Password, c.Database, c.Port)
 
 	db, err := goose.OpenDBWithDriver(dialect, dbString)
 	if err != nil {

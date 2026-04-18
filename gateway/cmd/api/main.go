@@ -1,25 +1,29 @@
 package main
 
 import (
+	"fmt"
+	"gateway/config"
 	"io"
 	"log"
 	"net/http"
-	"time"
 )
 
 func main() {
+
+	c := config.New()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", hello)
 
 	s := &http.Server{
-		Addr:			":8080",
-		Handler:		mux,
-		ReadTimeout: 	2 * time.Second,
-		WriteTimeout: 	2 * time.Second,
-		IdleTimeout:	5 * time.Second,
+		Addr:         fmt.Sprintf(":%d", c.Server.Port),
+		Handler:      mux,
+		ReadTimeout:  c.Server.TimeoutRead,
+		WriteTimeout: c.Server.TimeoutWrite,
+		IdleTimeout:  c.Server.TimeoutIdle,
 	}
 
-	log.Println("Starting Gateway server...")
+	log.Println("Starting Gateway server " + s.Addr)
 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal("Server startup failed")
 	}
